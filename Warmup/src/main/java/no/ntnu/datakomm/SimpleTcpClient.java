@@ -1,5 +1,8 @@
 package no.ntnu.datakomm;
 
+import java.io.*;
+import java.net.Socket;
+
 /**
  * A Simple TCP client, used as a warm-up exercise for assignment A4.
  */
@@ -8,7 +11,7 @@ public class SimpleTcpClient {
     private static final String HOST = "localhost";
     // TCP port
     private static final int PORT = 1301;
-
+    Socket socket;
     /**
      * Run the TCP Client.
      *
@@ -89,7 +92,13 @@ public class SimpleTcpClient {
      * @return True on success, false otherwise
      */
     private boolean closeConnection() {
-        return false;
+        try {
+            socket.close();
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
     }
 
     /**
@@ -101,7 +110,13 @@ public class SimpleTcpClient {
      */
     private boolean connectToServer(String host, int port) {
         // TODO - implement this method
-        // Remember to catch all possible exceptions that the Socket class can throw.
+        System.out.println("Client started...");
+        try {
+            socket = new Socket(host, port);
+            return true;
+        }   catch (IOException e){
+            System.out.println (e.getMessage());
+        }
         return false;
     }
 
@@ -118,6 +133,15 @@ public class SimpleTcpClient {
         // * Internet connection lost, timeout in transmission
         // * Connection not opened.
         // * What is the request is null or empty?
+        try {
+            OutputStream out = socket.getOutputStream();
+            PrintWriter writer = new PrintWriter(out, true);
+            writer.println(request);
+            return true;
+        }
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
         return false;
     }
 
@@ -130,8 +154,22 @@ public class SimpleTcpClient {
     private String readResponseFromServer() {
         // TODO - implement this method
         // Similarly to other methods, exception can happen while trying to read the input stream of the TCP Socket
-        return null;
+        try{
+
+            InputStream in = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String oneResponseLine;
+            oneResponseLine = reader.readLine();
+            return oneResponseLine;
+        }
+
+
+        catch(IOException e){
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
+
 
     /**
      * Log a message to the system console.

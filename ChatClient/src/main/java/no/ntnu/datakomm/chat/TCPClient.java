@@ -23,10 +23,19 @@ public class TCPClient {
      * @return True on success, false otherwise
      */
     public boolean connect(String host, int port) {
-        // TODO Step 1: implement this method
+        //
         // Hint: Remember to process all exceptions and return false on error
         // Hint: Remember to set up all the necessary input/output stream variables
-        return false;
+        try {
+            connection = new Socket(host,port);
+            toServer = new PrintWriter(connection.getOutputStream(),true);
+            fromServer = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            System.out.println("connected");
+            System.out.println("host: "+host+"\nport: "+port);
+            return true;
+        }
+        catch (IOException e){
+        return false;}
     }
 
     /**
@@ -39,8 +48,14 @@ public class TCPClient {
      * that no two threads call this method in parallel.
      */
     public synchronized void disconnect() {
-        // TODO Step 4: implement this method
         // Hint: remember to check if connection is active
+        if (isConnectionActive()){
+            try {
+                connection.close();
+                connection=null;
+            }
+            catch (IOException e){ }
+        }
     }
 
     /**
@@ -57,8 +72,16 @@ public class TCPClient {
      * @return true on success, false otherwise
      */
     private boolean sendCommand(String cmd) {
-        // TODO Step 2: Implement this method
+        // TODO ml remove println
         // Hint: Remember to check if connection is active
+        if (isConnectionActive()) {
+            System.out.println("trying to send command: "+cmd);
+            toServer.println(cmd);
+            System.out.println("sent command: "+cmd);
+            return true;
+
+
+        }
         return false;
     }
 
@@ -69,10 +92,10 @@ public class TCPClient {
      * @return true if message sent, false on error
      */
     public boolean sendPublicMessage(String message) {
-        // TODO Step 2: implement this method
         // Hint: Reuse sendCommand() method
         // Hint: update lastError if you want to store the reason for the error.
-        return false;
+        String cmd = "msg "+message;
+        return sendCommand(cmd);
     }
 
     /**
@@ -81,8 +104,10 @@ public class TCPClient {
      * @param username Username to use
      */
     public void tryLogin(String username) {
-        // TODO Step 3: implement this method
         // Hint: Reuse sendCommand() method
+        System.out.println("trying to login: "+ username);
+        if(sendCommand("login "+ username)) {
+        }
     }
 
     /**
@@ -116,6 +141,7 @@ public class TCPClient {
     public void askSupportedCommands() {
         // TODO Step 8: Implement this method
         // Hint: Reuse sendCommand() method
+        sendCommand("help");
     }
 
 
@@ -190,6 +216,10 @@ public class TCPClient {
     public void addListener(ChatListener listener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
+
+
+
+
         }
     }
 
