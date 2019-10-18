@@ -51,6 +51,9 @@ public class TCPClient {
         // Hint: remember to check if connection is active
         if (isConnectionActive()){
             try {
+                for (ChatListener l : listeners) {
+                    l.onDisconnect();
+                }
                 connection.close();
                 connection=null;
             }
@@ -118,6 +121,7 @@ public class TCPClient {
         // TODO Step 5: implement this method
         // Hint: Use Wireshark and the provided chat client reference app to find out what commands the
         // client and server exchange for user listing.
+        sendCommand("users");
     }
 
     /**
@@ -154,6 +158,13 @@ public class TCPClient {
         // TODO Step 3: Implement this method
         // TODO Step 4: If you get I/O Exception or null from the stream, it means that something has gone wrong
         // with the stream and hence the socket. Probably a good idea to close the socket in that case.
+        String result;
+        try {
+            result = fromServer.readLine();
+            System.out.println(result);
+            return result;
+        }
+        catch (IOException e){ }
 
         return null;
     }
@@ -194,6 +205,33 @@ public class TCPClient {
             // and act on it.
             // Hint: In Step 3 you need to handle only login-related responses.
             // Hint: In Step 3 reuse onLoginResult() method
+
+
+                String[] serverResponse =  waitServerResponse().split(" ");
+            switch (serverResponse[0]){
+                case "loginok":
+                    onLoginResult(true,"");
+                    break;
+
+                case "loginerr":
+                    onLoginResult(false,serverResponse[1]);
+                    break;
+
+                case "users":
+                    serverResponse[0]=null;
+                    String[] modifiedResponse = new String[serverResponse.length-1];
+
+                    for (int i=0;i<serverResponse.length;i++) {
+                        if (i!=0){
+                            modifiedResponse[i-1]=serverResponse[i];
+                        }
+                    }
+                    onUsersList(modifiedResponse);
+                    break;
+
+                default:
+                    break;
+            }
 
             // TODO Step 5: update this method, handle user-list response from the server
             // Hint: In Step 5 reuse onUserList() method
@@ -256,8 +294,10 @@ public class TCPClient {
      * Internet error)
      */
     private void onDisconnect() {
-        // TODO Step 4: Implement this method
         // Hint: all the onXXX() methods will be similar to onLoginResult()
+        for (ChatListener l : listeners) {
+            l.onDisconnect();
+        }
     }
 
     /**
@@ -266,7 +306,9 @@ public class TCPClient {
      * @param users List with usernames
      */
     private void onUsersList(String[] users) {
-        // TODO Step 5: Implement this method
+        for (ChatListener l : listeners) {
+            l.onUserList(users);
+        }
     }
 
     /**
